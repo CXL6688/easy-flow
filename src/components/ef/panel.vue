@@ -4,7 +4,7 @@
             <!--顶部工具菜单-->
             <el-col :span="24">
                 <div class="ef-tooltar">
-                    <el-link type="primary" :underline="false">{{data.name}}</el-link>
+                    <input v-model="data.name"/>
                     <el-divider direction="vertical"></el-divider>
                     <el-button type="text" icon="el-icon-delete" size="large" @click="deleteElement" :disabled="!this.activeElement.type"></el-button>
                     <el-divider direction="vertical"></el-divider>
@@ -14,12 +14,7 @@
                     <el-divider direction="vertical"></el-divider>
                     <el-button type="text" icon="el-icon-minus" size="large" @click="zoomSub"></el-button>
                     <div style="float: right;margin-right: 5px">
-                        <el-button type="info" plain round icon="el-icon-document" @click="dataInfo" size="mini">流程信息</el-button>
-                        <el-button type="primary" plain round @click="dataReloadA" icon="el-icon-refresh" size="mini">切换流程A</el-button>
-                        <el-button type="primary" plain round @click="dataReloadB" icon="el-icon-refresh" size="mini">切换流程B</el-button>
-                        <el-button type="primary" plain round @click="dataReloadC" icon="el-icon-refresh" size="mini">切换流程C</el-button>
-                        <el-button type="primary" plain round @click="dataReloadD" icon="el-icon-refresh" size="mini">自定义样式</el-button>
-                        <el-button type="info" plain round icon="el-icon-document" @click="openHelp" size="mini">帮助</el-button>
+                        <el-button type="primary" plain round icon="el-icon-document" @click="dataInfo" size="mini">保存</el-button>
                     </div>
                 </div>
             </el-col>
@@ -68,12 +63,11 @@
     import FlowHelp from '@/components/ef/help'
     import FlowNodeForm from './node_form'
     import lodash from 'lodash'
-    import { getDataA } from './data_A'
     import { getDataB } from './data_B'
-    import { getDataC } from './data_C'
-    import { getDataD } from './data_D'
 
     export default {
+
+
         data() {
             return {
                 // jsPlumb 实例
@@ -86,7 +80,7 @@
                 loadEasyFlowFinish: false,
                 flowHelpVisible: false,
                 // 数据
-                data: {},
+                data: {"name":""},
                 // 激活的元素、可能是节点、可能是连线
                 activeElement: {
                     // 可选值 node 、line
@@ -153,6 +147,9 @@
             // 返回唯一标识
             getUUID() {
                 return Math.random().toString(36).substr(3, 10)
+            },
+            changeActivityName(){
+              console.info("changeActivityName");
             },
             jsPlumbInit() {
                 this.jsPlumb.ready(() => {
@@ -372,7 +369,8 @@
                     left: left + 'px',
                     top: top + 'px',
                     ico: nodeMenu.ico,
-                    state: 'success'
+                    state: 'success',
+                    beanName:nodeMenu.beanName
                 }
                 /**
                  * 这里可以进行业务判断、是否能够添加该节点
@@ -449,9 +447,14 @@
             },
             // 流程数据信息
             dataInfo() {
-                this.flowInfoVisible = true
-                this.$nextTick(function () {
-                    this.$refs.flowInfo.init()
+                let vm=this;
+                this.axios.post("/activity/save",this.data).then(function (response) {
+                  console.info(response);
+                  if(response.data.code==0){
+                    vm.$message.success('保存成功');
+                  }else{
+                    vm.$message.error('保存失败');
+                  }
                 })
             },
             // 加载流程图
@@ -471,21 +474,9 @@
                     })
                 })
             },
-            // 模拟载入数据dataA
-            dataReloadA() {
-                this.dataReload(getDataA())
-            },
             // 模拟载入数据dataB
             dataReloadB() {
                 this.dataReload(getDataB())
-            },
-            // 模拟载入数据dataC
-            dataReloadC() {
-                this.dataReload(getDataC())
-            },
-            // 模拟载入数据dataD
-            dataReloadD() {
-                this.dataReload(getDataD())
             },
             zoomAdd() {
                 if (this.zoom >= 1) {
